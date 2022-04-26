@@ -113,6 +113,7 @@ users:
     - ecdsa-sha2-nistp521 AAAAE2VjZHNhLXNoYTItbmlzdHA1MjEAAAAIbmlzdHA1MjEAAACFBAA5J/SRFcYnps9vCQQwnsXquEeKt9R7/7Ab6YovEoU5nE1vUSFHXoBNPhIXKOJU8G2pGi9nMFS27z9B7+oyLPTQhwFFbUOoG+/jTrc4CHy+b2rdx7x1CbR4fQSsgC/t0g+z05o9jar/t0Lea6/6hIAM2uGh+KGiKzGT/aug2VBU3SvcbQ== korisnik@ODJ-O365-117
 
 ```
+[What else can you do with cloud-config?](https://cloudinit.readthedocs.io/en/latest/topics/examples.html#)
 **3. Generate cloud-init.iso:**
 ```shell
 xorriso -as genisoimage -output cloud-init.iso -volid CIDATA -joliet -rock user-data meta-data
@@ -273,6 +274,7 @@ Operating System: Arch Linux
  Hardware Vendor: QEMU
   Hardware Model: Standard PC _i440FX + PIIX, 1996_
 ```
+[more at](https://www.freedesktop.org/software/systemd/man/hostnamectl.html)
 
 ## Regional settings
 Some services that run on servers depend on time zone settings to work correctly. 
@@ -323,3 +325,159 @@ atari-se
 [test@test-PC ~]$ locale-gen
 ```
 Also note, Regional setting can be defined in cloud-init configuration files.
+
+## Managing users and permissions
+Let's try managing users in a VM created using GUI tool -> virt-manager.
+
+Requirements:
+* Virt-manager and ArchLinux VM
+* Cloud-init:
+
+**user data:**
+```shell
+#cloud-config
+users:
+  - default
+
+system_info:
+   default_user:
+     name: myuser
+     plain_text_passwd: '1234'
+     gecos: arch Cloud User
+     groups: [wheel, adm]
+     sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+     shell: /bin/bash
+     lock_passwd: False
+     
+```
+**Note: Cloud-init is sensitive with tab spaces and requires a empty line at the end of file**
+
+Make cloud-init.iso file:
+```shell
+xorriso -as genisoimage -output cloud-init.iso -volid CIDATA -joliet -rock user-data meta-data
+```
+Copy downloaded Arch system image (qcow2) in home directory and rename it to aarch.qcow2
+
+Add more space to image:
+```shell
+qemu-img resize aarch.qcow2 +10G
+```
+Then in virt-manager:
+
+* Use existing image -> aarch.qcow2 -> archlinux -> 1GB/2 cores -> Customize configuration before install -> Add cloud-init.iso and make it a CDROM type
+
+Then start ArchLinx VM and login with SSH from terminal on host to it:
+```
+ssh myuser@IPadressOfVM
+```
+Be careful when configuring users -> detect which user has permissions and what permissions does he have.
+* ! in /etc/shadow file mean that the user is forbiden to login into the system
+* User has permission to access ports from 1024, system uses ports to 1024.
+* kvm group in etc/groups exists for using nested virtualization
+* /dev/vd* - Linux way of mapping path to hard drives -> user dosen't have acess to disk, but has to filesystem!
+
+Working with users:
+>In Unix-like operating systems, the chmod command sets the permissions of files or directories.
+
+Syntax:
+```shell
+chmod ugo -rwx
+```
+Where:
+* ugo specifies a user, group of users or others
+* -rwx specifies allowed operations: read, write, execute
+>On Unix-like operating systems, the chown command changes ownership of files and directories in a filesystem.
+
+Syntax:
+```shell
+chown parameters user
+```
+Removing ownership:
+```shell
+[myuser@archlinux ~]$ chmod -R go-r ftp ftp/ 
+[myuser@archlinux ~]$ chmod -R go-- ftp ftp/ 
+```
+Where:
+* go-r removes reading permissions
+* go-- removes all permisions
+
+>On Unix-like operating systems, the usermod command modifies a user account.
+
+Syntax:
+```shell
+[myuser@archlinux ~]$ sudo usermod -aG video myuser
+```
+* Adds user "myuser" to group "video"
+```shell
+[myuser@archlinux ~]$ grep video /etc/group
+video:x:985:myuser
+```
+>On Unix-like operating systems, the useradd command creates a new user or sets the default information for new users.
+
+Syntax:
+```shell
+useradd user -c "Basic User" -s /bin/bash -m
+```
+* Where "Basic User" is description of the user, -s which shell will he use, -m creates a home directory for him.
+To add password for user "user" use:
+```shell
+passwd user
+```
+To block user loging into the system use:
+```shell
+usermod -s /bin/false user
+```
+>/bin/false does nothing and it just exits with a status code indicating failure when a user attempts to login to the machine.
+
+To view all devices attached to system use:
+```shell
+ls -la /dev
+```
+To view all users in the system use:
+```shell
+[test@test-PC ~]$ userdbctl
+NAME                   DISPOSITION   UID   GID REALNAME                       HOME              SHELL             
+root                   intrinsic       0     0 -                              /root             /usr/bin/zsh
+nobody                 intrinsic   65534 65534 Nobody                         /                 /usr/bin/nologin
+bin                    system          1     1 -                              /                 /usr/bin/nologin
+daemon                 system          2     2 -                              /                 /usr/bin/nologin
+mail                   system          8    12 -                              /var/spool/mail   /usr/bin/nologin
+ftp                    system         14    11 -                              /srv/ftp          /usr/bin/nologin
+rpc                    system         32    32 Rpcbind Daemon                 /var/lib/rpcbind  /usr/bin/nologin
+http                   system         33    33 -                              /srv/http         /usr/bin/nologin
+named                  system         40    40 BIND DNS Server                /                 /usr/bin/nologin
+uuidd                  system         68    68 -                              /                 /usr/bin/nologin
+dbus                   system         81    81 System Message Bus             /                 /usr/bin/nologin
+polkitd                system        102   102 PolicyKit daemon               /                 /usr/bin/nologin
+partimag               system        110   110 Partimage user                 /                 /usr/bin/nologin
+rtkit                  system        133   133 RealtimeKit                    /proc             /usr/bin/nologin
+usbmux                 system        140   140 usbmux user                    /                 /usr/bin/nologin
+nvidia-persistenced    system        143   143 NVIDIA Persistence Daemon      /                 /usr/bin/nologin
+cups                   system        209   209 cups helper user               /                 /usr/bin/nologin
+saned                  system        962   962 SANE daemon user               /                 /usr/bin/nologin
+libvirt-qemu           system        964   964 Libvirt QEMU user              /                 /usr/bin/nologin
+sddm                   system        968   968 Simple Desktop Display Manager /var/lib/sddm     /usr/bin/nologin
+openvpn                system        969   969 OpenVPN                        /                 /usr/bin/nologin
+nbd                    system        970   970 Network Block Device           /var/empty        /usr/bin/nologin
+git                    system        971   971 git daemon user                /                 /usr/bin/git-shell
+dnsmasq                system        972   972 dnsmasq daemon                 /                 /usr/bin/nologin
+dhcpcd                 system        973   973 dhcpcd privilege separation    /                 /usr/bin/nologin
+avahi                  system        974   974 Avahi mDNS/DNS-SD daemon       /                 /usr/bin/nologin
+tss                    system        975   975 tss user for tpm2              /                 /usr/bin/nologin
+systemd-timesync       system        976   976 systemd Time Synchronization   /                 /usr/bin/nologin
+systemd-resolve        system        977   977 systemd Resolver               /                 /usr/bin/nologin
+systemd-journal-remote system        978   978 systemd Journal Remote         /                 /usr/bin/nologin
+systemd-oom            system        979   979 systemd Userspace OOM Killer   /                 /usr/bin/nologin
+systemd-network        system        980   980 systemd Network Management     /                 /usr/bin/nologin
+systemd-coredump       system        981   981 systemd Core Dumper            /                 /usr/bin/nologin
+test                   regular      1000  1000 Test                           /home/test        /bin/bash
+
+```
+To kill all processes for a user session and deallocate the resources use:
+```shell
+loginctl kill-user user
+```
+* For those who want to know more:
+Users interact with the system using GUI or by terminal interface.
+[Here](https://www.golinuxcloud.com/difference-between-pty-vs-tty-vs-pts-linux/) you can find out more about terminal devices avaliable to users.
+More simultaneous users with keyboards and screens on one PC? No problem! [Multi-seat](https://www.freedesktop.org/wiki/Software/systemd/multiseat/).
