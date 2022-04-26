@@ -322,3 +322,4 @@ atari-se
 ```shell
 [test@test-PC ~]$ locale-gen
 ```
+Also note, Regional setting can be defined in cloud-init configuration files.
