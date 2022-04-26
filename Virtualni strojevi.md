@@ -500,6 +500,8 @@ ubuntu@ubuntu:~/webapp$ ls
 main  manage.py  skladiste
 
 ```
+Yes, I know now that you can use [sftp](https://linuxize.com/post/how-to-use-linux-sftp-command-to-transfer-files/).. and that it is much easier. :/
+
 Na web poslužiteljima instaliramo MySQL kijente:
 ```
 ubuntu@ubuntu:~/webapp$ sudo apt install mariadb-client-core-10.3
