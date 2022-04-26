@@ -756,3 +756,82 @@ You may notice that on first boot when cloud-init is configuring the system, boo
 journalctl --unit cloud-init -b
 ```
 That can be useful when you change cloud-init config files.
+
+# **[Infrastructure automation using Ansible](https://www.ansible.com)**
+Tired of doing all the work manually? No problem, use infrastructure automation tool as: Terraform, Ansible, Puppet, Chef, SaltStack.. whatever you prefer.
+
+We will try Red-Hat Ansible.
+Let's install it:
+```
+pacman -S ansible ansible-lint code
+```
+We write ansible playbooks in VS Code with extension -> Remote Development v0.21.0
+
+Process goes as following:
+* Host (VS Code on host) connects remotely with extensions to Virtual Machine 1 that has Ansible installed.
+* Virtual Machine 1 manages Virtual Machine 2 using Ansible
+
+How to start?
+1. In VS Code do ssh to your VM1.
+2. Then edit /etc/ansible/hosts file as following:
+```
+[me]
+192.168.122.225 -- your IP
+
+[others]
+192.168.122.13 -- IP of VM2
+```
+3. You can't ping VM's by authenticating with password because it only works with SSH keys! That's why you need to generate SSH keys on both VM's and add the public keys in each other to .ssh/allowed_hosts on VM1 and VM2
+
+4. Create a playbook.yaml file in VS Code:
+    * This playbook will perform a full system upgrade on both VM's
+```
+---
+- name: All hosts up-to-date
+  hosts: me others
+  become: yes
+  
+  tasks:
+    - name: full system upgrade
+      pacman:
+        update_cache: yes
+        upgrade: yes
+```
+[More on Ansible playbooks](https://docs.ansible.com/ansible/latest/user_guide/playbooks_intro.html)
+
+Now, let's install Apache HTTP server on VM2 and a postgresql DB on VM1:
+**playbook1.yaml:**
+```yaml
+---
+- name: Install apache
+  hosts: others
+  become: yes
+  
+  tasks:
+    - name: install apache
+      pacman:
+        name: apache
+        state: latest
+    - name: goooo apachee
+      ansible.builtin.service:
+        name: httpd
+        state: started
+```
+**playbook2.yaml**
+```yaml
+- name: install postgresql
+  hosts: me
+  become: yes
+
+  tasks:
+  - name: install postgresql
+    pacman:
+      name: postgresql
+      state: latest
+
+  - name: gooo postgresql
+    ansible.builtin.service:
+      name: postgresql
+      state: started
+```
+Ansible can do many more things, check out [Ansible extensions](https://docs.ansible.com/ansible/latest/collections/) 
