@@ -482,6 +482,150 @@ Users interact with the system using GUI or by terminal interface.
 [Here](https://www.golinuxcloud.com/difference-between-pty-vs-tty-vs-pts-linux/) you can find out more about terminal devices avaliable to users.
 More simultaneous users with keyboards and screens on one PC? No problem! [Multi-seat](https://www.freedesktop.org/wiki/Software/systemd/multiseat/).
 
+# Disks and ZFS
+Let's add some storage to our VM.
+We will add 5 disks using virt-manager
+
+Linux stores all connected disks into the directory /dev/disk. 
+You can view the disks by id, label, partition UUID or disk UUID.
+
+In a virtual machine disks are stored in /dev/vd* where * is the number of a drive
+
+Let's view all disks and their info in the system:
+```shell
+[test@test-PC ~]$ sudo fdisk -l
+Disk /dev/vda: 12 GiB, 12884901888 bytes, 25165824 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: 902FD2FE-154A-4635-9BF8-3FAB93BA67FC
+
+Device     Start      End  Sectors Size Type
+/dev/vda1   2048     4095     2048   1M BIOS boot
+/dev/vda2   4096 25165790 25161695  12G Linux filesystem
+
+
+Disk /dev/vdb: 1 GiB, 1073741824 bytes, 2097152 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+
+
+Disk /dev/vdc: 1 GiB, 1073741824 bytes, 2097152 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+
+
+Disk /dev/vdd: 1 GiB, 1073741824 bytes, 2097152 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+
+
+Disk /dev/vde: 1 GiB, 1073741824 bytes, 2097152 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+```
+
+We will now create a RAID disk pool using ZFS.
+ZFS:
+* ZFS - [ArchWiki](https://wiki.archlinux.org/title/ZFS) - pay atention to the Linux kernel version and edition
+    * ZFS needs to be compiled on the system and binds itself to the system hardware. 
+    * Linux kernel versions: linux, lts, zen (multimedia), dkms - more on that later
+    * Why ZFS? No technical filesystem limits (as of today), portable, fast etc.
+    * Has built-in Volume manager
+
+What's my Linux Kernel?: 
+```shell
+[test@test-PC ~]$uname -a
+Linux archlinux 5.17.1-arch1-1 #1 SMP PREEMPT Mon, 28 Mar 2022 20:55:33 +0000 x86_64 GNU/Linux
+```
+
+**Install ZFS**
+1. Download [PKGBUILD](https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=zfs-dkms)
+2. Then prerequisites:
+```shell
+pacman -S make fakeroot patch autoconf automake dkms nano
+``` 
+Download 0001-only-build-the-module-in-dkms patch.
+```shell
+curl -o 0001-only-build-the-module-in-dkms.conf.patch "https://aur.archlinux.org/cgit/aur.git/plain/0001-only-build-the-module-in-dkms.conf.patch?h=zfs-dkms"
+```
+4. Problems with [GPG package](https://wiki.archlinux.org/title/Pacman/Package_signing ):
+    * For signing use: [link](https://wiki.archlinux.org/title/GnuPG)
+```
+pacman-key --recv-keys keyid
+or
+gpg --recv-keys keyid
+```
+The key on 27.04.2022. was: 6AD860EED4598027
+5. Install ZFS Utils
+```
+curl -o zfs.initcpio.hook "https://aur.archlinux.org/cgit/aur.git/plain/zfs.initcpio.hook?h=zfs-utils"
+curl -o zfs.initcpio.install "https://aur.archlinux.org/cgit/aur.git/plain/zfs.initcpio.install?h=zfs-utils"
+nano PKGBUILD-utils -> https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=zfs-utils
+makepkg -p PKGBUILD-utils
+
+```
+
+6. Then build and install ZFS
+```shell
+makepkg
+sudo pacman -U zfs-dkms-2.1.4-1-any.pkg.tar.zst zfs-utils-2.1.4-1-x86_64.pkg.tar.zst
+```
+7. Test does ZFS even work?
+```shell
+sudo modprobe zfs
+```
+No? That's because of [Kernel Headers](https://wiki.archlinux.org/title/Dynamic_Kernel_Module_Support) install them with:
+```shell
+pacman -S linux-headers
+```
+Kernel Headers are used when various modules are using (connecting) to the Linux kernel - let's say they are the same as libraries in programming languages.
+
+**RAID pool*
+Let's create a zpool.
+
+ZFS is dividen in two layers:
+* ZFS - High layer
+* Zpool - low level
+
+*Zpool is..?*
+>ZFS filesystems are built on top of virtual storage pools called zpools. A zpool is constructed of virtual devices (vdevs), which are themselves constructed of block devices: files, hard drive partitions, or entire drives, with the last being the recommended usage.
+
+RAID-Z - software RAID inside ZFS. Best for data recovery because it dosen't depend on a physical RAID controller.
+It has features like:
+* Parity disks
+* Data deduplication - if finds multiple copies of the same file, leaves only one, deletes others and creates symbolic links to the one kept in RAID pool.
+* Auto-compression (lz4 and zstd)
+
+Setup all disks for ZFS and create a pool on disk vdb:
+```
+fdisk /dev/vd[bcde]
+- Typed in: g, n, 1, enter, enter, t, L, 157 "Solaris /usr and Apple ZFS", w
+zpool create mypool /dev/vdb
+```
+What have we done?
+```shell
+[user@archlinux ~]$ fdisk -l /dev/vd[bcde] | grep ZFS
+/dev/vdb1   2048 2095103 2093056 1022M Solaris /usr & Apple ZFS
+/dev/vdc1   2048 2095103 2093056 1022M Solaris /usr & Apple ZFS
+/dev/vdd1   2048 2095103 2093056 1022M Solaris /usr & Apple ZFS
+/dev/vde1   2048 2095103 2093056 1022M Solaris /usr & Apple ZFS
+[user@archlinux ~]$ zpool create mojbazen /dev/vdb
+[user@archlinux ~]$ zpool list
+NAME       SIZE  ALLOC   FREE  CKPOINT  EXPANDSZ   FRAG    CAP  DEDUP    HEALTH  ALTROOT
+mypool     960M   120K   960M        -         -     0%     0%  1.00x    ONLINE  -
+```
+
+Delete a pool:
+```shell
+zpool destroy mypool
+```
+
 # Optimizing Kernel
 Kernel? [Linux Kernel web](www.kernel.org)
 ArchLinux always uses the latest kernel.
