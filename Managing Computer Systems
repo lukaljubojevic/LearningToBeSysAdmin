@@ -101,7 +101,7 @@ users:
 
 ```
 
-**Basic user-data s with SSH key authentication for root and specific user:**
+**Basic user-data with SSH key authentication for root and specific user:**
 ```shell
 #cloud-config
 users:
@@ -134,4 +134,191 @@ ssh-keygen -f "/home/korisnik/.ssh/known_hosts" -R "[localhost]:60022"
 ```shell
 ssh -v -p 60022 fidit@localhost
 ssh -v -p 60022 root@localhost
+```
+## Some basic networking tasks after setting up a virtual machine or server enviroment:
+**Check network connection**
+1. Find your network interface name
+```shell
+[test@test-PC ~]$ ip address
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: enp7s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether e0:d5:5e:44:69:77 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.0.17/24 brd 192.168.0.255 scope global dynamic enp7s0
+       valid_lft 2613sec preferred_lft 2613sec
+    inet6 2a05:4f44:111c:8900::18/128 scope global dynamic noprefixroute 
+       valid_lft 410132sec preferred_lft 341012sec
+    inet6 2a05:4f44:111c:8900:50bd:bfcb:7176:40fb/64 scope global dynamic noprefixroute 
+       valid_lft 414713sec preferred_lft 345593sec
+    inet6 2a05:4f44:111c:8900:e2d5:5eff:fe44:6977/64 scope global dynamic mngtmpaddr noprefixroute 
+       valid_lft 414711sec preferred_lft 345591sec
+    inet6 fe80::645f:28c4:cfb8:75e3/64 scope link noprefixroute 
+       valid_lft forever preferred_lft forever
+```
+Network interfaces are listed by numbers 1:, 2:, 3:, etc. 
+* In a virtual machine it's named mostly eth0
+* In a PC it's named mostly enpXsY
+2. View network interface status and data about the network connection
+```shell
+[lljubojevic@Ljubojevic-PC ~]$ networkctl status enp7s0
+● 2: enp7s0                                                                                                 
+                     Link File: /usr/lib/systemd/network/99-default.link
+                  Network File: /etc/systemd/network/20-ethernet.network
+                          Type: ether
+                         State: routable (configured)
+                  Online state: online                                                                      
+                          Path: pci-0000:07:00.0
+                        Driver: r8169
+                        Vendor: Realtek Semiconductor Co., Ltd.
+                         Model: RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (Onboard Ethernet)
+              Hardware Address: XYZ
+                           MTU: 1500 (min: 68, max: 9194)
+                         QDisc: fq_codel
+  IPv6 Address Generation Mode: none
+          Queue Length (Tx/Rx): 1/1
+              Auto negotiation: yes
+                         Speed: 1Gbps
+                        Duplex: full
+                          Port: tp
+                       Address: XYZ
+                       Gateway: XYZ
+                           DNS: XYZ
+...
+
+**Hostnamectl**
+According to [Linuxhint](https://linuxhint.com/set-hostname-using-hostnamectl-command/):
+>The hostname is an identity of the system and is used by the networks to search the system.
+>The “hostnamectl” is a Linux command that is used to set the hostname in the terminal without even opening and editing in the etc/hostname file of a system.
+>Using the “hostnamectl” command, the user can edit the static, pretty, and transient hostname as well.
+
+Output of hostnamectl:
+```shell
+[test@test-PC ~]$ hostnamectl
+ Static hostname: test-PC
+       Icon name: computer-desktop
+         Chassis: desktop 🖥
+      Machine ID: 801cb2df0c5647d1835be225e0073015
+         Boot ID: 4fe8134f95d041af8dc53ab247179c28
+Operating System: Arch Linux                      
+          Kernel: Linux 5.17.4-arch1-1
+    Architecture: x86-64
+ Hardware Vendor: Gigabyte Technology Co., Ltd.
+  Hardware Model: Z370P D3
+```
+
+Hostnamectl displays:
+* Computer name (hostname)
+* Icon name is the machine identifying name according to XDG Icon Naming Specification.
+* What type of system it is? (Desktop, laptop, workstation etc.)
+* Machine and Boot ID, OS and Kernel version
+* CPU Architecture 
+* Motherboard vendor and model
+* Deployment is the enviroment in which is the system used e.g.  "development", "integration", "staging", "production"...
+* Location - useful when managing multiple servers/VM's
+
+It can be used for setting up:
+
+* Hostname:
+```shell
+[root@archlinux ~]# hostnamectl set-hostname myServer1
+[root@archlinux ~]# hostnamectl hostname 
+myServer1
+```
+* Icon-name
+```shell
+[root@archlinux ~]# hostnamectl set-icon-name computer
+[root@archlinux ~]# hostnamectl icon-name
+computer
+[root@archlinux ~]# hostnamectl set-icon-name workstation
+[root@archlinux ~]# hostnamectl icon-name
+workstation
+[root@archlinux ~]# hostnamectl set-icon-name chassis-laptop
+[root@archlinux ~]# hostnamectl icon-name
+chassis-laptop
+[root@archlinux ~]# hostnamectl set-icon-name chassis-watch
+[root@archlinux ~]# hostnamectl icon-name
+chassis-watch
+[root@archlinux ~]# hostnamectl set-icon-name embedded
+[root@archlinux ~]# hostnamectl icon-name
+embedded
+```
+* Deployment
+```shell
+[root@archlinux ~]# hostnamectl deployment staging
+[root@archlinux ~]# hostnamectl deployment
+staging
+```
+* Location
+```shell
+[root@archlinux ~]# hostnamectl location "Berlin, room 7, rack 6"
+```
+End result?
+```shell
+[root@archlinux ~]# hostnamectl
+ Static hostname: myServer1
+       Icon name: embedded
+         Chassis: vm 🖴
+      Deployment: staging
+        Location: Berlin, room 7, rack 6
+      Machine ID: 168fc71dc2b143fab51a45ad7b066d1b
+         Boot ID: 5dd62398ce6a4a859179e8f2b25911bf
+  Virtualization: qemu
+Operating System: Arch Linux                       
+          Kernel: Linux 5.16.13-arch1-1
+    Architecture: x86-64
+ Hardware Vendor: QEMU
+  Hardware Model: Standard PC _i440FX + PIIX, 1996_
+```
+
+## Regional settings
+Some services that run on servers depend on time zone settings to work correctly. 
+It's important, when planing the virtual or server environment to set it up properly.
+
+**localectl**
+>localectl - Control the system locale and keyboard layout settings
+
+[Full list of commands](https://man.archlinux.org/man/core/systemd/localectl.1.en#COMMANDS)
+
+**How to set it up?**
+1. Check current regional settings
+```shell
+[test@test-PC ~]$ localectl status
+   System Locale: LANG=hr_HR.UTF-8
+       VC Keymap: croat
+      X11 Layout: hr
+```
+2. List avaliable locales and keymaps - keyboard layouts      
+```shell
+[test@test-PC ~]$ localectl list-locales
+en_US.UTF-8
+hr_HR.UTF-8
+
+[test@test-PC ~]$ localectl list-keymaps
+ANSI-dvorak
+adnw
+amiga-de
+amiga-us
+apple-a1048-sv
+apple-a1243-sv
+apple-a1243-sv-fn-reverse
+apple-internal-0x0253-sv
+apple-internal-0x0253-sv-fn-reverse
+applkey
+atari-de
+atari-se
+...
+```
+3. Set the needed locale configuration
+```shell
+[test@test-PC ~]$ localectl set-locale hr_HR.UTF-8
+[test@test-PC ~]$ localectl set-x11-keymap hr
+[test@test-PC ~]$ setxkbmap hr
+```
+4. Generate the locale config file
+```shell
+[test@test-PC ~]$ locale-gen
 ```
