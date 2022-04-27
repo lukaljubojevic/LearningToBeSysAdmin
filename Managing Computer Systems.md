@@ -924,6 +924,163 @@ Delete a pool:
 zpool destroy mypool
 ```
 
+Let's create a RAID mirrored pool and mount it to the point /mypool: 
+```shell
+zpool create -m /mypool mypool mirror /dev/vdb1 /dev/vdc1
+mount | grep poo
+mypool on /mypool type zfs (rw,xattr,noacl)
+zpool list
+NAME       SIZE  ALLOC   FREE  CKPOINT  EXPANDSZ   FRAG    CAP  DEDUP    HEALTH  ALTROOT
+mypool     960M   120K   960M        -         -     0%     0%  1.00x    ONLINE  -
+```
+Let's create one directory and one file and give ourselfs ownership over the file in that mounted directory:
+```shell
+[fidit@archlinux ~]$ cd /mypool
+[fidit@archlinux mypool]$ ls
+[fidit@archlinux mypool]$ sudo mkdir mydir
+[fidit@archlinux mypool]$ sudo touch myfile
+[fidit@archlinux mypool]$ ls
+myfile mydir
+[fidit@archlinux mypool]$ ls -la
+total 18
+drwxr-xr-x 3 root root   4 Apr  1 14:17 .
+drwxr-xr-x 1 root root 146 Apr  1 14:15 ..
+-rw-r--r-- 1 root root   0 Apr  1 14:17 myfile
+drwxr-xr-x 2 root root   2 Apr  1 14:16 mydir
+[fidit@archlinux mypool]$ chown fidit:fidit myfile
+```
+We will now list our pool:
+```shell
+[fidit@archlinux mypool]$ zpool list
+NAME       SIZE  ALLOC   FREE  CKPOINT  EXPANDSZ   FRAG    CAP  DEDUP    HEALTH  ALTROOT
+mypool     960M   153K   960M        -         -     0%     0%  1.00x    ONLINE  -
+```
+How to attach detach more disks to the pool:
+```shell
+[fidit@archlinux mypool]$ zpool attach mypool /dev/vdd1
+[fidit@archlinux mypool]$ sudo zpool detach mypool vdb1
+[fidit@archlinux mypool]$ sudo zpool add mypool vdb1
+[fidit@archlinux mypool]$ sudo zpool add mypool vde1
+```
+We created a RAID-0 stripe:
+```shell
+[fidit@archlinux mypool]$ zpool status
+  pool: mypool
+ state: ONLINE
+config:
+
+	NAME        STATE     READ WRITE CKSUM
+	mypool      ONLINE       0     0     0
+	  vdc1      ONLINE       0     0     0
+	  vdb1      ONLINE       0     0     0
+	  vde1      ONLINE       0     0     0
+```
+
+Extending mirrors:
+```shell
+[fidit@archlinux ~]$ sudo zpool destroy mypool
+[fidit@archlinux ~]$ sudo zpool create -m /mypool mypool mirror /dev/vdb1 /dev/vdc1 
+[fidit@archlinux ~]$ sudo zpool attach mypool /dev/vdc1 /dev/vdd1
+[fidit@archlinux ~]$ zpool status
+  pool: mypool
+ state: ONLINE
+  scan: resilvered 232K in 00:00:00 with 0 errors on Fri Apr  1 14:46:44 2022
+config:
+
+	NAME        STATE     READ WRITE CKSUM
+	mypool    ONLINE       0     0     0
+	  mirror-0  ONLINE       0     0     0
+	    vdb1    ONLINE       0     0     0
+	    vdc1    ONLINE       0     0     0
+	    vdd1    ONLINE       0     0     0
+```
+
+**RAID-Z**
+>This is a non-standard RAID that uses the ZFS file system; no other file system can be used for this array. Note that there is not a single hardware controller that implements RAID-Z.
+>The ZFS file system uses an additional level of checksums to search for data corruption without displaying the appropriate messages. ZFS uses checksums with any level of redundancy, including single disk pools. The distribution mechanism is similar to RAID 5, but it uses dynamic bandwidth. Any block, regardless of its size, has its own RAID bandwidth, which means that each RAID-Z record is a full-band record.
+[source](https://www.diskinternals.com/raid-recovery/what-is-raidz/)
+
+How to create RAID-Z pool:      
+```shell
+sudo zpool create -m /mypool mypool raidz /dev/vdb1 /dev/vdc1 /dev/vdd1 /dev/vde1
+```
+
+So what about parity?
+* If you have up to 5 disks only one parity drive is needed
+* If you have 6 - 8 disks -> 2 parity drives
+* 8+ disks -> 3 parity and more..
+    * Those parity disks are usually the same size
+
+RAID-Z variants:
+*RAID-Z
+*RAID-Z2
+*RAID-Z3
+
+>In RAID-Z, files are never divided exactly in half, but the data is treated as blocks of a fixed length. The minimum number of disks you can use is three. Three drives are usually combined into a virtual device (vdev).
+
+>RAID-Z (sometimes called RAID-Z1) will provide a record of each unique data block so that it can recover from the failure of any single disk on vdev. In this case, the data is automatically distributed across the disk in the most optimal way. RAID-Z1 is practically an analogue of RAID 5, as it uses single parity. It is not difficult to guess that fault tolerance will be the same; i.e., there may be a possible failure of a drive.
+
+>RAID-Z2 is more fault-tolerant, as it uses two parity blocks and two data blocks from one piece of information. This is an analogue of RAID 6 and can also withstand the collapse of as many as two disks. In RAID-Z2, the maximum number of disks is at least four.
+
+>You can go further and try RAID-Z3, which has a maximum of at least five disks and the ability to survive damage to up to three disks. RAID-Z3 is rarely used due to its size. It is also not as space-efficient as other RAID-Z options.
+[source](https://www.diskinternals.com/raid-recovery/what-is-raidz/)
+How to create RAID-Z2:
+```shell
+[fidit@archlinux ~]$ sudo zpool create -m /mypool mypool raidz2 /dev/vdb1 /dev/vdc1 /dev/vdd1 /dev/vde1
+[fidit@archlinux ~]$ df -h
+Filesystem      Size  Used Avail Use% Mounted on
+dev             478M     0  478M   0% /dev
+run             485M  796K  485M   1% /run
+/dev/vda2        12G  2.4G  9.3G  21% /
+tmpfs           485M     0  485M   0% /dev/shm
+tmpfs           485M     0  485M   0% /tmp
+tmpfs            97M     0   97M   0% /run/user/1000
+mypool          1.8G  128K  1.8G   1% /mypool
+[fidit@archlinux ~]$ sudo zpool status
+  pool: mypool
+ state: ONLINE
+config:
+
+	NAME        STATE     READ WRITE CKSUM
+	mypool      ONLINE       0     0     0
+	  raidz2-0  ONLINE       0     0     0
+	    vdb1    ONLINE       0     0     0
+	    vdc1    ONLINE       0     0     0
+	    vdd1    ONLINE       0     0     0
+	    vde1    ONLINE       0     0     0
+```
+RAID-Z3:
+```shell
+[fidit@archlinux sudo zpool create -m /mypool raidz3 /dev/vdb1 /dev/vdc1 /dev/vdd1 /dev/vde1
+[fidit@archlinux ~]$ df -h
+Filesystem      Size  Used Avail Use% Mounted on
+dev             478M     0  478M   0% /dev
+run             485M  796K  485M   1% /run
+/dev/vda2        12G  2.4G  9.3G  21% /
+tmpfs           485M     0  485M   0% /dev/shm
+tmpfs           485M     0  485M   0% /tmp
+tmpfs            97M     0   97M   0% /run/user/1000
+mypool          832M  128K  832M   1% /mypool
+```
+
+Set compression method on a ZFS pool: 
+```
+[fidit@archlinux ~]$ sudo zfs set compression=zstd mypool
+```
+
+Security mechanisms
+* Resilvering - zfs reads data from all devices and makes sure that all of it can be read correctly (no errors, proper checksums etc.)
+* Scrubbing and resilvering are very similar operations. The difference is that resilvering only examines data that ZFS knows to be out of date (for example, when attaching a new device to a mirror or replacing an existing device), whereas scrubbing examines all data to discover silent errors due to hardware faults or disk failure.
+* Because scrubbing and resilvering are I/O-intensive operations, ZFS only allows one at a time.
+* A scrub is split into two parts: metadata scanning and block scrubbing. The metadata scanning sorts blocks into large sequential ranges which can then be read much more efficiently from disk when issuing the scrub I/O. 
+
+[source](https://openzfs.github.io/openzfs-docs/man/8/zpool-scrub.8.html)
+How to?
+```shell
+sudo zpool resilver mypool
+sudo zpool scrub mypool
+```
+
 # Optimizing Kernel
 Kernel? [Linux Kernel web](www.kernel.org)
 ArchLinux always uses the latest kernel.
