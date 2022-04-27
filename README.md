@@ -1,5 +1,5 @@
 # Work in progress!
-
+Finish managing computer systems, virtualni strojevi, docker wireguard, add TODO in Systemd tutorial
 # LearningToBeSysAdmin
 My notes while learning to become a SysAdmin
 
