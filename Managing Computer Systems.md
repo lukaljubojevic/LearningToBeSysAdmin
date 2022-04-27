@@ -481,6 +481,304 @@ loginctl kill-user user
 Users interact with the system using GUI or by terminal interface.
 [Here](https://www.golinuxcloud.com/difference-between-pty-vs-tty-vs-pts-linux/) you can find out more about terminal devices avaliable to users.
 More simultaneous users with keyboards and screens on one PC? No problem! [Multi-seat](https://www.freedesktop.org/wiki/Software/systemd/multiseat/).
+# Systemd
+Quoting materials given for homework from doc. dr. Vedran Miletić @ UniRi - Faculty of Informatics and Digital Technologies
+>modern operating systems based on Linux kernel use systemd for managing processes, specifically starting services on system startup.
+
+Systemd ecosystem
+>A set of programs called systemd actually contains a number of interconnected and somewhat independent tools, the most important of which are:
+> * systemd init process, it is the first process to run the Linux kernel after loading and it is in charge of starting and managing the life of other processes
+> * systemd services, which are files for defining requests, sequences and instructions for running other processes required for system operation
+> * systemctl tool, for viewing and managing defined service states
+> *journalctl tool, to view system events and service-related events
+
+Service:
+> A unit configuration file whose name ends in .service encodes information about a process controlled and supervised by systemd.
+Target:
+> A unit configuration file whose name ends in ".target" encodes information about a target unit of systemd, which is used for grouping units and as well-known synchronization points during start-up.
+> 
+These both refer to unit configuration files, which are:
+>A unit configuration file encodes information about a service, a socket, a device, a mount point, an automount point, a swap file or partition, a start-up target, a watched file system path, a timer controlled and supervised by systemd(1), a resource management slice or a group of externally created processes.
+
+
+Systemd unit is a configuration file used to implement startup services and goals:
+> * services that run daemon processes are defined by * .service files,
+> * startup targets are defined by * .target files.
+## How services work?
+### Pipeline
+> A pipe is a form of redirection (transfer of standard output to some other destination) that is used in Linux and other Unix-like operating systems to send the output of one command/program/process to another command/program/process for further processing. 
+> Pipe is used to combine two or more commands, and in this, the output of one command acts as input to another command, and this command’s output may act as input to the next command and so on. It can also be visualized as a temporary connection between two or more commands/ programs/ processes. The command line programs that do the further processing are referred to as filters. 
+> This direct connection between commands/ programs/ processes allows them to operate simultaneously and permits data to be transferred between them continuously rather than having to pass it through temporary text files or through the display screen. 
+
+Every service, process, program is connected to a service bus.
+User service bus:
+```shell
+[root@archlinux ~]# stat /run/user/0/bus
+  File: /run/user/0/bus
+  Size: 0         	Blocks: 0          IO Block: 4096   socket
+Device: 0,48	Inode: 16          Links: 1
+Access: (0666/srw-rw-rw-)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2022-03-11 14:13:08.986285110 +0000
+Modify: 2022-03-11 14:13:08.986285110 +0000
+Change: 2022-03-11 14:13:08.986285110 +0000
+ Birth: -
+```
+To list all bus connections viewed by process and the user who started it use:
+```
+[test@test-PC ~]$ busctl
+NAME                                      PID PROCESS         USER            CONNECTION    UNIT             >
+:1.0                                      481 systemd-resolve systemd-resolve :1.0          systemd-resolved.>
+:1.1                                      472 systemd-network systemd-network :1.1          systemd-networkd.>
+:1.11                                     635 sddm            root            :1.11         sddm.service     >
+:1.118                                   3444 sudo            root            :1.118        user@1000.service>
+:1.119                                   3448 busctl          root            :1.119        user@1000.service>
+:1.12                                     647 Xorg            root            :1.12         sddm.service     >
+:1.16                                     803 systemd         test            :1.16         user@1000.service>
+:1.18                                     855 kded5           test            :1.18         session-1.scope  >
+:1.19                                     858 kwin_x11        test            :1.19         session-1.scope  >
+:1.2                                        1 systemd         root            :1.2          init.scope       >
+:1.20                                     896 polkitd         polkitd         :1.20         polkit.service   >
+:1.21                                     890 ksmserver       test            :1.21         session-1.scope  >
+...
+```
+* Busctl - active mutual communication of processes locally, where they are connected, etc.
+* [Any]ctl - bus in which a SERVICE communicate with a SERVICEd (daemon)
+* machinectl is "systemd's docker"
+* coredumpctl - coredumpctl is a tool that can be used to retrieve and process core dumps and metadata which were saved by systemd-coredump
+
+Socket Statistics ss -l:
+>Ss is an abbreviation for Socket Statistics. As the name suggests, the ss command can be used to get socket statistics, which can display something similar to netstat. The advantage of ss is that it can display more detailed information about TCP and connection status, and is faster and more efficient than netstat.
+
+>When the number of socket connections on the server becomes very large, either using the netstat command or directly cat /proc/net/tcp, the execution speed will be slow.
+
+## Some systemd units:
+```shell
+[root@archlinux ~]# ls /usr/bin/*ctl
+/usr/bin/auditctl     /usr/bin/journalctl  /usr/bin/oomctl	 /usr/bin/userdbctl
+/usr/bin/bootctl      /usr/bin/keyctl	   /usr/bin/portablectl  /usr/bin/wdctl
+/usr/bin/busctl       /usr/bin/localectl   /usr/bin/resolvectl	 /usr/bin/zramctl
+/usr/bin/coredumpctl  /usr/bin/loginctl    /usr/bin/sysctl
+/usr/bin/homectl      /usr/bin/machinectl  /usr/bin/systemctl
+/usr/bin/hostnamectl  /usr/bin/networkctl  /usr/bin/timedatectl
+```
+>oomctl may be used to get information about the various contexts read in by the systemd(1) userspace out-of-memory (OOM) killer, systemd-oomd(8). 
+* e.g. when service mariadb crashes, view why it crashes.
+* oomctl - "OOM KILLER" - deletes the service that uses a lot of system memory
+## Systemd startup target unit
+
+Systemd boots the system to a predefined target consisting of specific running services.
+
+The predefined launch targets are:
+* poweroff.target (SysV runlevel0')
+* reboot.target (SysV runlevel6)
+* multi-user.target (SysV runlevel[234])
+* graphical.target (SysV runlevel5)
+* rescure.target (SysV runlevel1)
+* emergency.target
+
+In the general case, systemd boots the system to the default.target state, which typically points to graphical.target. The system will boot to the graphical interface and allow you to log in only if one of the display managers, such as Simple Desktop Display Manager (SDDM) and GNOME Display Manager (GDM).
+* systemctl isolate TARGET command can be used to move the system to the desired boot destination.
+
+Services are implemented as service units, e.g. acpid.service, sshd.service.
+A detailed specification can be found in the systemd.service man page.
+
+## Syslog
+```shell
+command rsyslog
+configuration file /etc/rsyslog.conf
+  $ -- global commands
+  $ModLoad
+```
+
+## Rotate log files
+* command logrotate
+* config file /etc/logrotate.conf
+    * directives that determine how often rotation occurs: daily, weekly, monthly, yearly
+    * directives that determine compression: compress, nocompress, compresscmd, uncompresscmd, compressext, compressoptions, delaycompress
+    * directive rotate NUMBER makes sure that the NUMBER of rotated files is saved, ie that the log file passes the NUMBER of rotation before deleting
+    * directive mail ADRESS allows you to send a log file by email to the ADDRESS address when rotating just before deleting
+
+## Systemd timer
+>to automate the execution of individual services in accordance with a certain time schedule, we can use systemd units of the type timer 
+> * all existing timers on the system and their states can be viewed with the systemctl list-timers command
+> * every times consists of two files located in directory /etc/systemd/system
+>     * SERVICE.timer - defines the time dependency or start time of our service
+>     * SERVICE.service - defines the service itself or the commands to run
+
+Through all the examples we use SERVICE as the name of our pair of timers and systemd services:
+* enabling and starting the timer is done with the help of systemctl tools as for all other types of units:
+```shell
+systemctl enable SERVICE.timer
+systemctl disable SERVICE.timer
+systemctl start SERVICE.timer
+systemctl stop SERVICE.timer
+```
+Structure of systemd.timer files:
+* the SERVICE.timer file must be located in the /etc/systemd/system directory and be of the following format:
+```shell
+[Unit]
+Description=My time dependent service
+
+[Timer]
+# ...
+
+[Install]
+WantedBy=timers.target
+```
+Structure of SERVICE.service files:
+>The difference between the SERVICE.service file for using a timer from a typical systemd service file is in:
+>* SERVICE.service for timer file does not contain a section [Install] timer service
+>* It does not need to be enabled or run with systemctl, we enable and run the SERVICE.timer unit instead
+
+Example format:
+```shell
+[Unit]
+# ...
+
+[Service]
+# ...
+```
+
+There are two types of timers:
+* relative for a event
+* defined for a specific time
+
+Parameters for a timer defined relative to an event:
+* OnActiveSec - relative to the start time of the timer itself 
+* OnBootSec - relative to the start time of OS boot
+* OnStartupSec - relative to starting systemd process
+* OnUnitActiveSec - relative to the time of last unit start
+* OnUnitInactiveSec - relative to the time of last unit stop
+* OnCalendar - defined for a specific date-time
+* Relative times are defined by combinig time measurement units: 1h 20m or 5 s
+* Specific times can be defined generically or specifically by valuess: hourly, daily, weekly, monthly, 2003-03-05 05:40
+
+
+## Systemd Journal
+> Journal (daemon systemd-journald) is a component of systemd in charge of viewing and managing log files
+> a replacement for Syslog, although systems can use both
+> The systemd-journald service collects and stores log data and associated metadata in binary form
+> * The journalctl tool is used to view log files
+> * Output structure similar to / var / log / messages
+> * High-priority messages are highlighted visually (red, bold)
+> * Times are translated to the local time zone
+> * All data is displayed, including rotated log files
+* journalctl -n NUMBER displays only the last NUMBER of messages
+* journalctl -o FORM shows the output in the form of FORM, where FORM can be verbose, export, json, ...
+* journalctl -f tracks messages as they are created
+
+## Rsync backup service
+> rsync is an open source tool for efficient incremental data transfer. It is very useful as a data backup tool. When used for backup, a very important parameter is --archive, or -a which stores metadata about files
+Usage:
+```
+rsync -a /myDirIwantToBackup /backupDir
+```
+
+## Starting units on boot 
+### Example 1: Reflector
+>Reflector is a Python script which can retrieve the latest mirror list from the Arch Linux Mirror Status page, filter the most up-to-date mirrors, sort them by speed and overwrite the file /etc/pacman.d/mirrorlist. 
+
+```
+[fidit@archlinux ~]$ systemctl status reflector-init.service
+● reflector-init.service - Initializes mirrors for the VM
+     Loaded: loaded (/etc/systemd/system/reflector-init.service; enabled; vendor preset: disabled)
+     Active: active (exited) since Fri 2022-04-22 12:15:47 UTC; 8min ago
+    Process: 692 ExecStart=reflector --latest 20 --protocol https --sort rate --save /etc/pacman.d/m>
+   Main PID: 692 (code=exited, status=0/SUCCESS)
+        CPU: 1.176s
+
+[fidit@archlinux ~]$ cat /etc/systemd/system/reflector-init.service
+[Unit]
+Description=Initializes mirrors for the VM
+After=network-online.target
+Wants=network-online.target
+Before=sshd.service cloud-final.service
+ConditionFirstBoot=yes
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=reflector --latest 20 --protocol https --sort rate --save /etc/pacman.d/mirrorlist
+
+[Install]
+WantedBy=multi-user.target
+[fidit@archlinux ~]$ cat /etc/systemd/system/pacman-init.service
+[Unit]
+Description=Initializes Pacman keyring
+Before=sshd.service cloud-final.service
+ConditionFirstBoot=yes
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/pacman-key --init
+ExecStart=/usr/bin/pacman-key --populate archlinux
+
+[Install]
+WantedBy=multi-user.target
+```
+* Services can be executed paralelly on boot process.
+* Services know what they depend on, it is possible to change the order.
+* After=network-online.target cloud-config.service rc-local.service - condition what needs to be started before this service.
+* Before=sshd.service cloud-final.service - condition before which services must this service start
+* ConditionFirstBoot=yes - runs only on first OS boot
+
+### Example 2: cloud-final
+>This stage runs as late in boot as possible. Any scripts that a user is accustomed to running after logging into a system should run correctly here. Things that run here include:
+> *   package installations
+> * configuration management plugins (puppet, chef, salt-minion)
+> * user-defined scripts (e.g. shell scripts passed as user-data)
+
+```shell
+[fidit@archlinux ~]$ cat /usr/lib/systemd/system/cloud-final.service
+[Unit]
+Description=Execute cloud user/final scripts
+After=network-online.target cloud-config.service rc-local.service
+Wants=network-online.target cloud-config.service
+
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/cloud-init modules --mode=final
+RemainAfterExit=yes
+TimeoutSec=0
+KillMode=process
+TasksMax=infinity
+
+# Output needs to appear in instance console output
+StandardOutput=journal+console
+
+[Install]
+WantedBy=cloud-init.target
+
+[fidit@archlinux ~]$ cat /usr/lib/systemd/system/cloud-config.service
+[Unit]
+Description=Apply the settings specified in cloud-config
+After=network-online.target cloud-config.target
+After=snapd.seeded.service
+Wants=network-online.target cloud-config.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/cloud-init modules --mode=config
+RemainAfterExit=yes
+TimeoutSec=0
+
+# Output needs to appear in instance console output
+StandardOutput=journal+console
+
+[Install]
+WantedBy=cloud-init.target
+```
+List dependencies of a service:
+```shell
+[fidit@archlinux ~]$ systemctl list-dependencies cloud-init.target
+cloud-init.target
+● ├─cloud-config.service
+● ├─cloud-final.service
+● ├─cloud-init-local.service
+● └─cloud-init.service
+```
 
 # Disks and ZFS
 Let's add some storage to our VM.
