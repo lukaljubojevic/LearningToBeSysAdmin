@@ -1213,7 +1213,7 @@ journalctl --unit cloud-init -b
 That can be useful when you change cloud-init config files.
 
 # **[Infrastructure automation using Ansible](https://www.ansible.com)**
-Tired of doing all the work manually? No problem, use infrastructure automation tool as: Terraform, Ansible, Puppet, Chef, SaltStack.. whatever you prefer.
+Tired of doing all the work manually? No problem, use infrastructure automation tools as: Terraform, Ansible, Puppet, Chef, SaltStack.. whatever you prefer.
 
 We will try Red-Hat Ansible.
 Let's install it:
