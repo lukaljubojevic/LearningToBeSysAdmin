@@ -189,6 +189,7 @@ Network interfaces are listed by numbers 1:, 2:, 3:, etc.
                        Gateway: XYZ
                            DNS: XYZ
 ...
+```
 
 **Hostnamectl**
 According to [Linuxhint](https://linuxhint.com/set-hostname-using-hostnamectl-command/):
