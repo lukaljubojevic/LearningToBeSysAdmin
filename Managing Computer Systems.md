@@ -277,6 +277,40 @@ Operating System: Arch Linux
 ```
 [more at](https://www.freedesktop.org/software/systemd/man/hostnamectl.html)
 
+**DNS Settings?**
+>resolvectl may be used to resolve domain names, IPv4 and IPv6 addresses, DNS resource records and services with the systemd-resolved.service(8) resolver service. By default, the specified list of parameters will be resolved as hostnames, retrieving their IPv4 and IPv6 addresses. If the parameters specified are formatted as IPv4 or IPv6 operation the reverse operation is done, and a hostname is retrieved for the specified addresses.
+
+Use resolvectl command to edit those settings, e.g.:
+```shell
+[test@test-PC ~]$ resolvectl help
+resolvectl [OPTIONS...] COMMAND ...
+
+Send control commands to the network name resolution manager, or
+resolve domain names, IPv4 and IPv6 addresses, DNS records, and services.
+
+Commands:
+  query HOSTNAME|ADDRESS...    Resolve domain names, IPv4 and IPv6 addresses
+  service [[NAME] TYPE] DOMAIN Resolve service (SRV)
+  openpgp EMAIL@DOMAIN...      Query OpenPGP public key
+  tlsa DOMAIN[:PORT]...        Query TLS public key
+  status [LINK...]             Show link and server status
+  statistics                   Show resolver statistics
+  reset-statistics             Reset resolver statistics
+  flush-caches                 Flush all local DNS caches
+  reset-server-features        Forget learnt DNS server feature levels
+  dns [LINK [SERVER...]]       Get/set per-interface DNS server address
+  domain [LINK [DOMAIN...]]    Get/set per-interface search domain
+  default-route [LINK [BOOL]]  Get/set per-interface default route flag
+  llmnr [LINK [MODE]]          Get/set per-interface LLMNR mode
+  mdns [LINK [MODE]]           Get/set per-interface MulticastDNS mode
+  dnsovertls [LINK [MODE]]     Get/set per-interface DNS-over-TLS mode
+  dnssec [LINK [MODE]]         Get/set per-interface DNSSEC mode
+  nta [LINK [DOMAIN...]]       Get/set per-interface DNSSEC NTA
+  revert LINK                  Revert per-interface configuration
+  log-level [LEVEL]            Get/set logging threshold for systemd-resolved
+...
+```
+
 ## Regional settings
 Some services that run on servers depend on time zone settings to work correctly. 
 It's important, when planing the virtual or server environment to set it up properly.
@@ -327,7 +361,7 @@ atari-se
 ```
 **What about timezone?**
 Use timedatectl command to set it:
-```
+```shell
 timedatectl set-timezone Europe/Zagreb
 ```
 
