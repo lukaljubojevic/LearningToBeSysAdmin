@@ -325,6 +325,12 @@ atari-se
 ```shell
 [test@test-PC ~]$ locale-gen
 ```
+**What about timezone?**
+Use timedatectl command to set it:
+```
+timedatectl set-timezone Europe/Zagreb
+```
+
 Also note, Regional setting can be defined in cloud-init configuration files.
 
 ## Managing users and permissions
