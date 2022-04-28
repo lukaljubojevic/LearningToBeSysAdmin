@@ -5,13 +5,15 @@ translate virtualni strojevi and docker wireguard... add TODO in Systemd tutoria
 My notes while learning to become a SysAdmin
 
 # Who am I?
-My name is Luka Ljubojević. Im am a full-time student at Faculty of Informatics and Digital Technologies - Rijeka, third year of the undergraduate study.
+My name is Luka Ljubojević (21 M). Im am a full-time student at Faculty of Informatics and Digital Technologies - Rijeka, Croatia, third year of the undergraduate study.
 
-I possess informative knowledge on Computer Networks, Network Operating Systems, Operating Systems in general, Managing Computer Systems, IT Systems Security, relational databases (Oracle), and I understand the basics of programming (Python and C++).
+I possess knowledge in Computer Networks, Computer Systems Architecture, Network Operating Systems, Operating Systems in general, Managing Computer Systems, IT Systems Security, relational databases (Oracle), and I understand the basics of programming (Python and C++).
 
 I have basic experience, through classes or independent work, in: Docker Containers and creating them using Compose tool, Ansible, Scaleway cloud instances, QEMU, virt-manager, bash scripting, VMWare Player, Redis caching system, load balancer HAProxy. Apache – XAMPP, MariaDB (MySQL) and Oracle OraDB DBMS, GitHub – for student projects in various classes.
 
-My passion is installing, managing, configuring and maintaining computer systems. When I have time, I dedicate myself to my hobby – operating systems and hardware.
+Also, non-related to this brach, I gained some knowledge in: Data and Database modeling (ER method), Creating HTML websites, Algorithms, Object-oriented programming, Web programming (frontend and backend) and IT project management.
+
+My passion is installing, managing, configuring and maintaining computer systems. I dedicate myself to it in my free time.
 
 I daily use ArchLinux. It's simply, in my opinion, the best.
 
