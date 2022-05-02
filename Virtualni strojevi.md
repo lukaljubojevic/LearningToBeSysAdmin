@@ -28,7 +28,7 @@ The seminar paper was developed in GNU Linux - Mint, with packages (on a server 
 
 For the purposes of the seminar paper, we download the "Ubuntu Server 20.04 LTS (Focal Fossa) daily builds" system image,
 * Available at: https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.img
-* 
+ 
 We copy the system image four times and rename it according to the name of the virtual machines and arrange them in folders according to the following hierarchy:
 * PZ MMOS
     * LB
