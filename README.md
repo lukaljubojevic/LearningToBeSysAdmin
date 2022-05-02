@@ -1,9 +1,6 @@
 # Work in progress!
 Finish TODO in Systemd tutorial
 
-# LearningToBeSysAdmin
-My notes while learning to become a SysAdmin
-
 # Who am I?
 My name is Luka Ljubojević (21 M). I'm a full-time student at Faculty of Informatics and Digital Technologies - Rijeka, Croatia, third year of the undergraduate study.
 
@@ -21,8 +18,9 @@ I daily use ArchLinux. It's simply, in my opinion, the best.
 I've spent a lot of hours using VMWare Player software and installing different systems (Windows, Linux, MacOS – old and new editions), and, sometimes, I would install them on physical hardware.
 Continue...
 
-# What is my motivation?
+# What is my motivation and why does this repo exist?
 Write...
+
 
 # How can you contact me?
 * e-Mail: luka.ljubojevic01@gmail.com
