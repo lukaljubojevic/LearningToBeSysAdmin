@@ -1,9 +1,5 @@
-# Work in progress!
-* Finish TODO in Systemd tutorial
-
+# Hello world!
 ![image](https://user-images.githubusercontent.com/95573193/166239702-2eb69668-9cba-4b19-a8bd-3f54f6286aab.png)
-
-**Hello world!**
 
 # Who am I?
 My name is Luka Ljubojević (21 M). I'm a full-time student at Faculty of Informatics and Digital Technologies - Rijeka, Croatia, third year of the undergraduate study.
@@ -27,9 +23,11 @@ Write...
 
 
 # How can you contact me?
-* e-Mail: luka.ljubojevic01@gmail.com
+* [e-Mail](luka.ljubojevic01@gmail.com)
 * [Facebook](https://www.facebook.com/luka.ljubojevic.946/)
 * [LinkedIn](https://www.linkedin.com/in/luka-ljubojević-2bb4a5239/)
 
 # Notes about repo
-My next step is go through [cdrrazan's](https://github.com/cdrrazan/learn-system-admin-in-10-weeks) github repo: learn-system-admin-in-10-weeks and write markdown notes about my research. 
+* **Work in Progress!**
+* Finish TODO in Systemd tutorial
+* My next step is go through [cdrrazan's](https://github.com/cdrrazan/learn-system-admin-in-10-weeks) github repo: learn-system-admin-in-10-weeks and write markdown notes about my research. 
