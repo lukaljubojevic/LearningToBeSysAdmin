@@ -5,7 +5,7 @@ add TODO in Systemd tutorial
 My notes while learning to become a SysAdmin
 
 # Who am I?
-My name is Luka Ljubojević (21 M). Im am a full-time student at Faculty of Informatics and Digital Technologies - Rijeka, Croatia, third year of the undergraduate study.
+My name is Luka Ljubojević (21 M). I'm a full-time student at Faculty of Informatics and Digital Technologies - Rijeka, Croatia, third year of the undergraduate study.
 
 I possess knowledge in Computer Networks, Computer Systems Architecture, Network Operating Systems, Operating Systems in general, Managing Computer Systems, IT Systems Security, relational databases (Oracle), and I understand the basics of programming (Python and C++).
 
