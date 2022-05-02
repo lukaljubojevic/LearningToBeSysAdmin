@@ -1,7 +1,7 @@
 # Work in progress!
 * Finish TODO in Systemd tutorial
 
-![image](https://user-images.githubusercontent.com/95573193/166239323-576036fc-af92-4d04-8646-9eef9dc80ae2.png)
+![image](https://user-images.githubusercontent.com/95573193/166239702-2eb69668-9cba-4b19-a8bd-3f54f6286aab.png)
 
 **Hello world!**
 
