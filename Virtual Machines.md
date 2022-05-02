@@ -1,4 +1,4 @@
-# Virtual machines
+# Virtual Machines
 Luka Ljubojević
 # Introduction
 For the topic of the 1st seminar paper from the course Network and Mobile Operating Systems, I created a web server configuration for managing the status and location of items in the warehouse.
