@@ -569,7 +569,7 @@ now applies command instantly, default waits a minute.
 
 # TODO:
 * **System logs and Unit states**
-* **Viewing and editing Units*
+* **Viewing and editing Units**
 * **System logs**
 * **Targets**
 
