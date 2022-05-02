@@ -1,5 +1,5 @@
 # Work in progress!
-Finish TODO in Systemd tutorial
+* Finish TODO in Systemd tutorial
 
 ![image](https://user-images.githubusercontent.com/95573193/166239323-576036fc-af92-4d04-8646-9eef9dc80ae2.png)
 
@@ -32,4 +32,4 @@ Write...
 * [LinkedIn](https://www.linkedin.com/in/luka-ljubojević-2bb4a5239/)
 
 # Notes about repo
- My next step is go through [cdrrazan's](https://github.com/cdrrazan/learn-system-admin-in-10-weeks) github repo: learn-system-admin-in-10-weeks and write markdown notes about my research. 
+My next step is go through [cdrrazan's](https://github.com/cdrrazan/learn-system-admin-in-10-weeks) github repo: learn-system-admin-in-10-weeks and write markdown notes about my research. 
