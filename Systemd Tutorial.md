@@ -567,8 +567,9 @@ sudo systemctl poweroff now
 ```
 now applies command instantly, default waits a minute.
 
-**System logs and Unit states**
-**Viewing and editing Units*
-**System logs**
-**Targets**
+# TODO:
+* **System logs and Unit states**
+* **Viewing and editing Units*
+* **System logs**
+* **Targets**
 
