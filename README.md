@@ -1,5 +1,5 @@
 # Work in progress!
-add TODO in Systemd tutorial
+Finish TODO in Systemd tutorial
 
 # LearningToBeSysAdmin
 My notes while learning to become a SysAdmin
