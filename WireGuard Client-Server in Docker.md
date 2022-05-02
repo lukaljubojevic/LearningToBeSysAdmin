@@ -1,13 +1,13 @@
-# Konfiguracija virtualne privatne mreže alatom WireGuard
+# Creating a Docker-based VPN using WireGuard
+Created for doc. dr. sc. [Vedran Miletić](https://vedran.miletic.net/) to create teaching materials for course [Security of Information and Communication Systems](https://group.miletic.net/hr/nastava/materijali/wireguard-virtualna-privatna-mreza/)
 
-[Virtualna privatna mreža](https://en.wikipedia.org/wiki/Virtual_private_network) (engl. virtual private netvork, kraće VPN) pruža usluge privatne mreže korištenjem neke javne mreže kao što je internet. Pomoću VPN-a možemo slati i primati podatke preko javne mreže, a istovremeno koristiti konfiguraciju privatne lokalne mreže. VPN koristi različite sigurnosne mehanizme koji osiguravaju tajnost i autentičnost podaka koje šaljemo. Virtualnu privatnu mrežu moguće je stvoriti brojnim protokolima, npr. [L2TP](https://en.wikipedia.org/wiki/Layer_2_Tunneling_Protocol) na veznom sloju (koji implementira [xl2tpd](https://github.com/xelerance/xl2tpd)), [IPsec](https://en.wikipedia.org/wiki/IPsec) na mrežnom sloju (koji implementira [strongSwan](https://www.strongswan.org/)) i [SSTP](https://en.wikipedia.org/wiki/Secure_Socket_Tunneling_Protocol) na transportnom sloju (koji implementira [SoftEther VPN](https://www.softether.org/)).
+A [virtual private network](https://en.wikipedia.org/wiki/Virtual_private_network) (VPN) provides private network services using a public network such as the Internet. With a VPN, we can send and receive data over a public network while using a private LAN configuration. VPN uses various security mechanisms to ensure the confidentiality and authenticity of the data we send. A virtual private network can be created with a number of protocols, such as [L2TP](https://en.wikipedia.org/wiki/Layer_2_Tunneling_Protocol) on the link layer (which implements [xl2tpd](https://github.com/xelerance/xl2tpd)), [IPsec](https://en.wikipedia.org/wiki/IPsec) on the network layer (which implements [strongSwan](https://www.strongswan.org/)) and [SSTP](https://en.wikipedia.org/wiki/Secure_Socket_Tunneling_Protocol)  on the transport layer (which implements  [SoftEther VPN](https://www.softether.org/)).
 
-WireGuard je vrlo jednostavan, ali moderan VPN poslužitelj i klijent koji koristi najsuvremenije kriptografske tehnologije. Cilja biti brži, jednostavniji, pouzdaniji i korisniji od IPsec-a. Također je ozbiljna konkurencija OpenVPN-u.
+WireGuard is a very simple but modern VPN server and client that uses the latest cryptographic technologies. It aims to be faster, simpler, more reliable and more useful than IPsec. It is also a serious competition to OpenVPN.
 
-Inicijalno je izdan za sustave bazirane na Linux jezgri, no sada je postao višeplatformsko rješenje za uspostavu VPN mreže.
-Razvoj WireGuarda još uvijek je u toku, iako se već sada smatra najsigurnijim i najjednostavnijim za korištenje VPN rješenjem u industriji.
+It was initially released for Linux kernel-based systems, but has now become a multi-platform solution for establishing a VPN network. The development of WireGuard is still ongoing, although it is already considered the safest and easiest to use VPN solution in the industry.
 
-WireGuard koristi najmodernije kriptografske tehnologije poput:
+WireGuard uses state-of-the-art cryptographic technologies such as:
 * [Noise protocol framework](http://www.noiseprotocol.org/), 
 * [Curve25519](https://en.wikipedia.org/wiki/Curve25519), 
 * [ChaCha20](https://www.cryptopp.com/wiki/ChaCha20), 
@@ -16,31 +16,30 @@ WireGuard koristi najmodernije kriptografske tehnologije poput:
 * [SipHash24](https://en.wikipedia.org/wiki/SipHash), 
 * [HKDF](https://en.wikipedia.org/wiki/HKDF)
 
-Izlaskom Linux jezgre 5.6, inačica WireGuarda za linux platformu prelazi u stabilno produkcijsko izdanje te se ugrađuje u samu Linux jezgru.
-S obzirom da je Linux jezgra, i njezine komponente, otvorenog tipa (GNU General Public Licence (GPL) version 2), spajanjem WireGuarda s Linux jezgrom, izvorni kod postaje dostupan široj javnosti. 
+With the release of the Linux kernel 5.6, the version of WireGuard for the Linux platform is moving to a stable production release and is being built into the Linux kernel itself. Because the Linux kernel, and its components, are open source (GNU General Public License (GPL) version 2), by merging WireGuard with the Linux kernel, the source code becomes available to the general public.
 
-Nakon povezivanja WireGuard klijenta s WireGuard poslužiteljem (koje opisujemo u nastavku), stvara se tunel kroz internet kroz koji se onda šalju podaci. Podaci koji prolaze tunelom su šifirirani kako ih treće strane na internetu ne bi mogle čitati, a dodatno se mogu koristiti i razne vrste kompresije kako bi podataka bilo manje.
+After connecting the WireGuard client to the WireGuard server (described below), a tunnel is created through the Internet through which data is then sent. The data passing through the tunnel is encrypted so that third parties on the Internet cannot read it, and various types of compression can be used to make the data smaller.
 
-# Podešavanje WireGuard VPN arhitekture koristeći Docker
+# Setting up WireGuard VPN using Docker
 
-## Instalacija alata Docker
-### Ako nemate administratorske ovlasti
-Zamolite Vašeg administratora da izvrši instalaciju alata Docker naredbom:
-* Za sustave bazirane na Ubuntu distribuciji:
+## Installing Docker
+### If you are not a sudo user:
+Ask your administrator to install Docker with the command:
+* Ubuntu-based distros:
 ```shell
 sudo apt-get install docker docker-compose
 ```
-* Za sustave bazirane na Arch distribuciji:
+* Arch-based distros:
 ```shell
 sudo pacman -S docker docker-compose
 ```
-Zatim instalirajte sve potrebne zavisnosti paketa za alat Docker:
-* Za sustave bazirane na Ubuntu distribuciji:
+Then install all Docker dependencies:
+* Ubuntu-based distros:
 ```shell
 sudo apt-get install -y dbus-user-session
 sudo apt-get install -y uidmap
 ```
-* Za sustave bazirane na Arch distribuciji:
+* Arch-based distros:
 ```shell
 sudo pacman -S shadow
 sudo pacman -S fuse-overlayfs
@@ -49,11 +48,11 @@ Zatim ugasite Docker servis naredbom:
 ```shell
 sudo systemctl disable --now docker.service docker.socket
 ```
-Prije instalacije alata Docker potrebno je generirati subuid i subgid.
-[Subuid](https://man7.org/linux/man-pages/man5/subuid.5.html) daje ovlasti korisničkom ID-u za mapiranje raspona korisničkih ID-jeva iz svog imenskog prostora u podređene imenske prostore.
-[Subgid](https://man7.org/linux/man-pages/man5/subgid.5.html) daje ovlasti ID-ju korisničke grupe za mapiranje raspona ID-jeva grupe iz svojih imenskih prostora u podređene imenske prostore.
+Before installing Docker alata Docker you must generate subuid and subgid.
+[Subuid](https://man7.org/linux/man-pages/man5/subuid.5.html) authorizes the user ID to map the range of user IDs from its namespace to child namespaces.
+[Subgid](https://man7.org/linux/man-pages/man5/subgid.5.html) authorizes the user group ID to map the range of group IDs from its namespaces to child namespaces.
 
-Za generiranje subuid-a i subgid-a potrebno je napisati Python skriptu sa slijedećim linijama:
+To generate subuids and subgids, you need to write a Python script with the following code:
 ```python
 f = open("/etc/subuid", "w")
 for uid in range(1000, 65536):
@@ -65,70 +64,69 @@ for uid in range(1000, 65536):
     f.write("%d:%d:65536\n" %(uid,uid*65536))
 f.close()
 ```
-Zatim izvršavamo Python skriptu i vršimo instalaciju alata Docker iz repozirorija "[rootless](https://docs.docker.com/engine/security/rootless/)":
+Then we execute the Python script and install Docker from the repository "[rootless](https://docs.docker.com/engine/security/rootless/)":
 ```shell
 sudo python3 uid.py
 curl -fsSL https://get.docker.com/rootless | sh
 ```
 
-Po instalaciji, ako koristite sustave bazirane na Ubuntu distribuciji, izvršite označavanje varijabli i funkcija koje se prosljeđuju podređenim procesima (eng. "export"):
+After installation, if you use systems based on Ubuntu distribution, mark variables and functions that are passed to subordinate processes ("export"):
 ```shell
 export PATH=/home/lljubojevic/bin:$PATH
 export DOCKER_HOST=unix:///run/user/1000/docker.sock
 ```
-Postavite odgovarajuće dozvole pristupa za Vašeg korisnika Docker servisima naredbom:
+Set the appropriate access permissions for your Docker user with the command:
 ```shell
 sudo chmod 666 /var/run/docker.sock
 ```
-Na kraju, za potrebe podešavanja WireGuard klijent-poslužitelja izvršite naredbe za prihvaćanje prometa na vratima koje će WireGuard server koristiti:
+Finally, to configure the WireGuard client server, execute port traffic acceptance commands that the WireGuard server will use:
 ```shell
 sudo ufw allow 51820
 sudo iptables -I INPUT -p tcp -m tcp --dport 51820 -j ACCEPT
 ```
-Zatim, na Vašem korisničkom profilu izvršite pokretanje alata Docker:
+Then, start Docker as a rootless user:
 ```shell
 systemctl --user enable docker
 systemctl --user start docker
 ```
-### Ako imate administratorske ovlasti
-Izvršite instalaciju alata Docker na slijedeći način:
-* Za sustave bazirane na Ubuntu distribuciji:
+### If you are a sudo user:
+Install Docker this way:
+* Ubuntu-based distros:
 ```shell
 sudo apt-get install docker docker-compose
 ```
-* Za sustave bazirane na Arch distribuciji:
+* Arch-based distros:
 ```shell
 sudo pacman -S docker docker-compose
 ```
-Pokrenite servise alata Docker naredom:
+Start Docker service using:
 ```shell
 sudo systemctl enable --now docker.service docker.socket
 ```
-Dodatno, ako želite pokretanje alata Docker prilikom pokretanja sustava izvršite naredbu:
-* Za sustave bazirane na Ubuntu distribuciji:
+Additionally, if you want to start Docker at startup, run the command:
+* Ubuntu-based distros:
 ```shell
 sudo loginctl enable-linger $(whoami)
 ```
-* Za sustave bazirane na Arch distribuciji:
+* Arch-based distros:
 ```shell
 sudo loginctl enable-linger (whoami)
 ```
-
-## Podešavanje WireGuard VPN poslužitelja
-Pod pretpostavkom da imate administratorske ovlasti, za potrebe podešavanja WireGuard klijent-poslužitelja izvršite naredbe za prihvaćanje prometa na vratima koje će WireGuard server koristiti:
+## WireGuard VPN Server Setup
+Assuming you have administrator privileges, to configure the WireGuard client server, execute port traffic acceptance commands that the WireGuard server will use:
 ```shell
 sudo ufw allow 51820
 sudo iptables -I INPUT -p tcp -m tcp --dport 51820 -j ACCEPT
 ```
-Kreirajte direktorij:
+Make a directory:
 ```shell
 mkdir wireguard-server
 ```
-Unutar direktorija wireguard-server stvorite datoteku "docker-compose.yaml"
+In that directory create a "docker-compose.yaml" file:
 ```shell
 nano docker-compose.yaml
 ```
-Sadržaj datoteke **docker-compose.yaml za poslužitelja**:
+**docker-compose.yaml for server**:
 ```shell
 version: "2.1"
 services:
@@ -155,16 +153,16 @@ services:
       - net.ipv6.conf.all.disable_ipv6=0
     restart: unless-stopped
 ```
-Izvršite generiranje Docker kontejnera naredbom:
+Then execute the creation of a Docker WireGuard VPN server container:
 ```
 docker-compose up -d
 ```
-**Provjera ispravnosti postupka:**
-Ukoliko naredba:
+**Does it work?:**
+If the command:
 ```shell
 docker logs wireguard-server
 ```
-Pruži izlaz oblika:
+shows output as:
 ```shell
 [s6-init] making user provided files available at /var/run/s6/etc...exited 0.
 [s6-init] ensuring user provided files have correct perms...exited 0.
@@ -272,18 +270,18 @@ PEER 1 QR code:
 CoreDNS-1.9.0
 linux/amd64, go1.17.6, ace3dcb
 ```
-Poslužitelj je ispravno generiran.
+It works!
 
-## Podešavanje WireGuard VPN klijenta
-Kreirajte direktorij:
+## WireGuard VPN Client Setup
+Make a directory:
 ```shell
 mkdir wireguard-klijent
 ```
-Unutar direktorija wireguard-klijent stvorite datoteku "docker-compose.yaml"
+In that directory create the "docker-compose.yaml" file:
 ```shell
 nano docker-compose.yaml
 ```
-Sadržaj datoteke **docker-compose.yaml za klijenta**:
+**docker-compose.yaml for client**:
 ```shell
 version: '3.7'
 services:
@@ -309,20 +307,20 @@ networks:
   backbone:
     driver: bridge
 ```
-Potrebno je generirati docker kontejner za klijenta, koji trenutno nije funkcionalan, kako bi se stvorio konfiguracijski direktorij:
+It is necessary to generate a docker container for the client, which is not currently functional, in order for a creation of the configuration directory:
 ```shell
 docker-compose up -d
 ```
-Zatim, po pokretanju kontejnera, potrebno je stvoriti WireGuard mrežno sučelje pomoću kojeg je klijent komunicirati s poslužiteljem:
+Then, after launching the container, it is necessary to create a WireGuard network interface through which the client communicates with the server:
 ```shell
 docker exec -it wireguard-klijent ip link add dev wg0 type wireguard
 ```
-Prilikom generiranja poslužitelja, stvoriti će se i konfiguracijska datoteka za čvorove (eng. "peer") pod nazivom "peerX.conf". Sadržaj te datoteke potrebno je prepisati u datoteku wg0.conf koja će se nalaziti u direktoriju wireguard-klijent. 
-Postupak teče:
+When the server is generated, a "peer" configuration file called "peerX.conf" will also be created. The contents of this file need to be overwritten in the wg0.conf file, which will be located in the wireguard-client directory.
+Let's do that:
 ```shell
 cp ./wireguard-server/config/peer/peer1.conf ./wireguard-klijent/wireguard/wg0.conf
 ```
-Datoteka wg0.conf je oblika:
+Change the wg0.conf file as following:
 ```shell
 [Interface]
 Address = 10.13.13.2
@@ -336,11 +334,11 @@ Endpoint = 10.13.13.1:51820
 AllowedIPs = 0.0.0.0/0, ::/0
 ```
 
-Napomene:
-* Ukoliko stavite parametar iz kofiguracije poslužitelja u broj veći od jedan (PEERS=n) nastati će n direktorija za čvorove i konfiguracije za njih, upute podrazumijevaju da imate samo jedan klijentski čvor.
-* Datoteka wg0.conf može varirati.
-
-## Testiranje klijent-poslužitelj VPN arhitekture:
+Notes:
+* If you set a parameter from the server configuration to a number greater than one (PEERS = n) n directories for nodes and configurations for them will be created, the instructions assume that you have only one client node.
+* The wg0.conf file may vary.
+* 
+## Testing the Client-Server VPN architecture:
 ```shell
 docker exec -it wireguard-server curl -w "\n" ifconfig.me
 46.188.154.181
@@ -348,28 +346,29 @@ docker exec -it wireguard-server curl -w "\n" ifconfig.me
 docker exec -it wireguard-klijent curl -w "\n" ifconfig.me
 46.188.154.181
 ```
-Ukoliko su IP adrese iste, konfiguracija je valjana.
-Prikazana IP adresa je Vaša trenutna (ili trajna) IP adresa kojom pristupate internetu.
-# Pojašnjenje konfiguracijskih parametara u datotekama docker-compose.yaml
-Poslužiteljska strana mora sadržavati parametre:
-* version: "2.1" - tražena verzija alata docker-compose
-* services: - servisi koje kontejner pokreće
-* wireguard: - ime servisa
-* image: - tražena slika koju alat Docker povlači iz svog repozitorija, te container_name: - proizvoljni naziv kontejnera.
-* cap_add: - pruža kontejneru povišena dopuštenja na domaćinskom računalu i omogućuje mu interakciju s mrežnim sučeljima domaćina.
-* environment: - postavke okruženja unutar Docker kontejnera
-    * PUID i PGID - varijable koje definiraju korisnika i grupu
-    * TZ=Europe/Zagreb - vremenska zona kontejnera, potrebno definirati
-    * SERVERURL - naziv domene poslužitelja (može biti prazan, definiran javnom IP adresom poslužitelja ili postavljen na automatsko konfiguriranje)
-    * SERVERPORT - vrata na kojima se poslužitelj otvara
-    * PEERS - broj čvorova u VPN mreži (može biti broj ili naziv tipa: laptom, tablet, phone)
-    * PEERDNS - kad je postavljen na auto, kontejner sam podešava DNS postavke
-* volumes: - direktoriji na domaćinu koje kontejner smije koristiti
-* ports: - vrata koja kontejner smije koristiti
-* sysctls: - parametri koji omogućuju da kontejner komunicira s mrežama prema van 
-* restart: - definira u kojim se slučajevima kontejner smije ponovno pokrenuti.
+If the IP addresses are the same, the configuration is valid.
+The IP address displayed is your current (or permanent) IP address by which you access the Internet.
 
-# Izvori
+# Explanation of configuration parameters in docker-compose.yaml file
+Server side must contain parameters:
+* version: "2.1" - the required version of the docker-compose tool
+* services: - services started by the container
+* wireguard: - service name
+* image: - the requested image that the Docker tool retrieves from its repository, and container_name: - arbitrary container name.
+* cap_add: - gives the container elevated permissions on the host computer and allows it to interact with the host's network interfaces.
+* environment: - environment settings inside the Docker container
+    * PUID and PGID - variables that define the user and group
+    * TZ = Europe / Zagreb - container time zone, needs to be defined
+    * SERVERURL - server domain name (can be empty, defined by the public IP address of the server or set to automatic configuration)
+    * SERVERPORT - the door on which the server opens
+    * PEERS - number of nodes in the VPN network (can be number or type name: laptop, tablet, phone)
+    * PEERDNS - when set to auto, the container adjusts the DNS settings itself
+* volumes: - directories on the host that the container may use
+* ports: - the door that the container may use
+* sysctls: - parameters that allow the container to communicate with networks externally
+* restart: - defines in which cases the container may be restarted.
+
+# Sources
 [Pedrolamas](https://www.pedrolamas.com/2020/11/20/how-to-connect-to-a-wireguard-vpn-server-from-a-docker-container/)
 [Markontech](https://markontech.com/linux/install-wireguard-vpn-server-with-docker/)
 [Spad.uk](https://spad.uk/wireguard-as-a-vpn-client-in-docker-using-pia/)
