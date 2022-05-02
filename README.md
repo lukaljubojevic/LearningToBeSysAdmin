@@ -27,7 +27,7 @@ Write...
 # How can you contact me?
 * e-Mail: luka.ljubojevic01@gmail.com
 * [Facebook](https://www.facebook.com/luka.ljubojevic.946/)
-* [LinkedIn]()
+* [LinkedIn](https://www.linkedin.com/in/luka-ljubojević-2bb4a5239/)
 
 # Notes about repo
  My next step is go through [cdrrazan's](https://github.com/cdrrazan/learn-system-admin-in-10-weeks) github repo: learn-system-admin-in-10-weeks and write markdown notes about my research. 
