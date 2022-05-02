@@ -1,5 +1,5 @@
 # Work in progress!
-translate virtualni strojevi and docker wireguard... add TODO in Systemd tutorial
+add TODO in Systemd tutorial
 
 # LearningToBeSysAdmin
 My notes while learning to become a SysAdmin
@@ -24,8 +24,5 @@ Continue...
 # What is my motivation?
 Write...
 
-# Why is repo partly in croatian?
-I will translate the repo to English when it is ready, and when I gather the time.
-
 # Notes about repo
- My next step is go through [cdrrazan's](https://github.com/cdrrazan/learn-system-admin-in-10-weeks) github repo: learn-system-admin-in-10-weeks. 
+ My next step is go through [cdrrazan's](https://github.com/cdrrazan/learn-system-admin-in-10-weeks) github repo: learn-system-admin-in-10-weeks and write markdown notes about my research. 
