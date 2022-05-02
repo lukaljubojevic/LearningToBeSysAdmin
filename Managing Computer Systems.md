@@ -1174,6 +1174,89 @@ You can see some red coloured items. They are part of the Critical-chain.
 What is the Critical-chain? [Basically this.](https://trstringer.com/systemd-critical-chain/)
 * "+" shows how much seconds has been added to the boot time and @ shows when did a service started compared to booting.
 
+## Analyzing service security
+To view the security state of all services use:
+```shell
+[fidit@archlinux ~]$ systemd-analyze security
+UNIT                                 EXPOSURE PREDICATE HAPPY
+auditd.service                            8.7 EXPOSED   🙁
+dbus.service                              9.6 UNSAFE    😨
+dm-event.service                          9.5 UNSAFE    😨
+emergency.service                         9.5 UNSAFE    😨
+getty@tty1.service                        9.6 UNSAFE    😨
+rescue.service                            9.5 UNSAFE    😨
+shadow.service                            9.6 UNSAFE    😨
+sshd.service                              9.6 UNSAFE    😨
+systemd-ask-password-console.service      9.4 UNSAFE    😨
+systemd-ask-password-wall.service         9.4 UNSAFE    😨
+systemd-homed.service                     5.8 MEDIUM    😐
+systemd-journald.service                  4.3 OK        🙂
+systemd-logind.service                    2.8 OK        🙂
+systemd-networkd.service                  2.6 OK        🙂
+systemd-resolved.service                  2.1 OK        🙂
+systemd-rfkill.service                    9.4 UNSAFE    😨
+systemd-timesyncd.service                 2.1 OK        🙂
+systemd-udevd.service                     6.7 MEDIUM    😐
+systemd-userdbd.service                   2.2 OK        🙂
+user@1000.service                         9.4 UNSAFE    😨
+```
+To view the security state and parameters of a specific service use:
+```shell
+[fidit@archlinux ~]$ systemd-analyze security sshd.service
+  NAME                                                        DESCRIPTION                           >
+✗ RootDirectory=/RootImage=                                   Service runs within the host's root di>
+  SupplementaryGroups=                                        Service runs as root, option does not >
+  RemoveIPC=                                                  Service runs as root, option does not >
+✗ User=/DynamicUser=                                          Service runs as root user             >
+✗ CapabilityBoundingSet=~CAP_SYS_TIME                         Service processes may change the syste>
+✗ NoNewPrivileges=                                            Service processes may acquire new priv>
+✓ AmbientCapabilities=                                        Service process does not receive ambie>
+✗ PrivateDevices=                                             Service potentially has access to hard>
+✗ ProtectClock=                                               Service may write to the hardware cloc>
+✗ CapabilityBoundingSet=~CAP_SYS_PACCT                        Service may use acct()                >
+✗ CapabilityBoundingSet=~CAP_KILL                             Service may send UNIX signals to arbit>
+✗ ProtectKernelLogs=                                          Service may read from or write to the >
+✗ CapabilityBoundingSet=~CAP_WAKE_ALARM                       Service may program timers that wake u>
+✗ CapabilityBoundingSet=~CAP_(DAC_*|FOWNER|IPC_OWNER)         Service may override UNIX file/IPC per>
+✗ ProtectControlGroups=                                       Service may modify the control group f>
+✗ CapabilityBoundingSet=~CAP_LINUX_IMMUTABLE                  Service may mark files immutable      >
+✗ CapabilityBoundingSet=~CAP_IPC_LOCK                         Service may lock memory into RAM      >
+✗ ProtectKernelModules=                                       Service may load or read kernel module>
+✗ CapabilityBoundingSet=~CAP_SYS_MODULE                       Service may load kernel modules       >
+✗ CapabilityBoundingSet=~CAP_SYS_TTY_CONFIG                   Service may issue vhangup()           >
+✗ CapabilityBoundingSet=~CAP_SYS_BOOT                         Service may issue reboot()            >
+✗ CapabilityBoundingSet=~CAP_SYS_CHROOT                       Service may issue chroot()            >
+✗ PrivateMounts=                                              Service may install system mounts     >
+✗ SystemCallArchitectures=                                    Service may execute system calls with >
+✗ CapabilityBoundingSet=~CAP_BLOCK_SUSPEND                    Service may establish wake locks      >
+✗ MemoryDenyWriteExecute=                                     Service may create writable executable>
+✗ RestrictNamespaces=~user                                    Service may create user namespaces    >
+✗ RestrictNamespaces=~pid                                     Service may create process namespaces >
+✗ RestrictNamespaces=~net                                     Service may create network namespaces >
+✗ RestrictNamespaces=~uts                                     Service may create hostname namespaces>
+✗ RestrictNamespaces=~mnt                                     Service may create file system namespa>
+✗ CapabilityBoundingSet=~CAP_LEASE                            Service may create file leases        >
+✗ CapabilityBoundingSet=~CAP_MKNOD                            Service may create device nodes       >
+✗ RestrictNamespaces=~cgroup                                  Service may create cgroup namespaces  >
+✗ RestrictSUIDSGID=                                           Service may create SUID/SGID files    >
+✗ RestrictNamespaces=~ipc                                     Service may create IPC namespaces     >
+✗ ProtectHostname=                                            Service may change system host/domainn>
+✗ CapabilityBoundingSet=~CAP_(CHOWN|FSETID|SETFCAP)           Service may change file ownership/acce>
+✗ CapabilityBoundingSet=~CAP_SET(UID|GID|PCAP)                Service may change UID/GID identities/>
+✗ LockPersonality=                                            Service may change ABI personality    >
+✗ ProtectKernelTunables=                                      Service may alter kernel tunables     >
+✗ RestrictAddressFamilies=~AF_PACKET                          Service may allocate packet sockets   >
+✗ RestrictAddressFamilies=~AF_NETLINK                         Service may allocate netlink sockets  >
+✗ RestrictAddressFamilies=~AF_UNIX                            Service may allocate local sockets    >
+✗ RestrictAddressFamilies=~…                                  Service may allocate exotic sockets   >
+✗ RestrictAddressFamilies=~AF_(INET|INET6)                    Service may allocate Internet sockets >
+✗ CapabilityBoundingSet=~CAP_MAC_*                            Service may adjust SMACK MAC          >
+✗ RestrictRealtime=                                           Service may acquire realtime schedulin>
+```
+* SSHD is executed as root user at the port 22
+* To ensure that some services don't go crazy while working use capatibilities in security 
+* It's only restricted on that specific local machine
+
 ## Editing boot options
 Editing GRUB boot options /boot/grub/grub.cfg
 Just in case, if you break something, edit the 1st of Advanced options in GRUB config menuentry - Submenu.
@@ -1252,6 +1335,118 @@ You may notice that on first boot when cloud-init is configuring the system, boo
 journalctl --unit cloud-init -b
 ```
 That can be useful when you change cloud-init config files.
+
+# Firewalls
+Layer 3 and layer 2 firewalls always analyze packet headers
+On Linux, software firewalls are:
+* iptables - will be replaced with nftables
+* nftables
+    * > nftables is the modern Linux kernel packet classification framework. New code should use it instead of the legacy {ip,ip6,arp,eb}_tables (xtables) infrastructure. For existing codebases that have not yet converted, the legacy xtables infrastructure is still maintained as of 2021
+* netlink socket 
+    * > Netlink is used to transfer information between the kernel and
+       user-space processes.  It consists of a standard sockets-based
+       interface for user space processes and an internal kernel API for
+       kernel modules.
+       
+How to use nftables firewall:       
+```shell
+nft
+mnl.c:60: Unable to initialize Netlink socket: Protocol not supported
+```
+Fix: Reboot after system upgrade
+```
+[fidit@archlinux ~]$ find /lib/modules/5.15.36-1-lts/ -name \*tables\*
+/lib/modules/5.15.36-1-lts/kernel/net/bridge/netfilter/ebtables.ko.zst
+/lib/modules/5.15.36-1-lts/kernel/net/ipv4/netfilter/arp_tables.ko.zst
+/lib/modules/5.15.36-1-lts/kernel/net/ipv4/netfilter/ip_tables.ko.zst
+/lib/modules/5.15.36-1-lts/kernel/net/ipv6/netfilter/ip6_tables.ko.zst
+/lib/modules/5.15.36-1-lts/kernel/net/netfilter/nf_tables.ko.zst
+/lib/modules/5.15.36-1-lts/kernel/net/netfilter/x_tables.ko.zst
+```
+What can you do with a firewall?
+
+1. **Create a table that supports IPv4 and IPv6:**
+```shell
+[fidit@archlinux ~]$ sudo nft add table inet my_table
+[fidit@archlinux ~]$ sudo nft list ruleset
+table inet my_table {
+}
+
+```
+2. **Create a chain:**
+```
+sudo nft add chain inet  my_table my_chain
+[fidit@archlinux ~]$ sudo nft add chain inet my_table my_chain2 '{type filter hook input priority 0;}'
+[fidit@archlinux ~]$ sudo nft list ruleset
+table inet my_table {
+	chain my_chain {
+	}
+
+	chain my_chain2 {
+		type filter hook input priority filter; policy accept;
+	}
+}
+
+[fidit@archlinux ~]$ sudo nft chain inet my_table my_chain2 '{policy drop;}'
+DONT DO THIS! YOU WILL DROP ALL TRAFFIC IN VM AND LOCK YOURSELF OUT:(!
+```
+
+* Chain actions:
+    * Accept 
+    * Drop 
+    * Reject
+
+* Chains in iptables:
+    * forward, input, output -> FILTER
+    * pre/postroute -> NAT
+
+* Chains in nftables:
+    * ipv4, inet, ip6
+
+3. **Add rules to the chain**:
+**Example 1**
+Let's block (drop) all ipv4 traffic from 192.168.122.1:80
+Hint: http uses port 80 on layer 5, and uses tcp protocol on l4
+```shell
+[fidit@archlinux ~]$ sudo nft add rule inet my_table my_chain2 ip saddr 192.168.122.1 tcp dport 80 drop
+
+pacman -S nginx
+
+[fidit@archlinux ~]$ sudo systemctl start nginx
+
+[fidit@archlinux ~]$ systemctl status nginx
+
+```
+**Example 2**
+Explicitly Enable access to TCP port 80 from a local address
+```shell
+sudo nft add rule inet my_table my_chain2 ip saddr 127.0.0.1 tcp dport 80 accept
+```
+
+**Example 3**
+Add rule that discards all udp traffic
+```shell
+[fidit@archlinux ~]$ sudo nft add rule inet my_table my_chain2 ip protocol udp drop
+```
+**Example 4**
+Disable ssh from IP address 13.198.209.200
+```shell
+sudo nft add rule inet my_table my_chain2 ip saddr 193.198.209.200 tcp dport 22 reject
+```
+**Example 5**
+Disable connection from local to address 51.158.166.78 port 80
+```shell
+sudo nft add chain inet my_table my_chain3 '{type filter hook output priority 0;}'
+
+sudo nft add rule inet my_table my_chain3 ip daddr 51.158.166.73 tcp dport 80 drop
+```
+**Example 6**
+Block access to the address 120.240.11.25 from address 25.41.36.127.
+```shell
+sudo nft add chain inet my_table my_chain4 '{type filter hook forward priority 0;}'
+
+sudo nft add rule inet my_table my_chain4 ip saddr 25.41.36.127 ip daddr 121.240.11.25 drop
+```
 
 # **[Infrastructure automation using Ansible](https://www.ansible.com)**
 Tired of doing all the work manually? No problem, use infrastructure automation tools as: Terraform, Ansible, Puppet, Chef, SaltStack.. whatever you prefer.
