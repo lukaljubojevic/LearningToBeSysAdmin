@@ -15,12 +15,12 @@ My passion is installing, managing, configuring and maintaining computer systems
 I daily use ArchLinux. It's simply, in my opinion, the best.
 
 # How it all started?
-I've spent a lot of hours using VMWare Player software and installing different systems (Windows, Linux, MacOS – old and new editions), and, sometimes, I would install them on physical hardware.
-Continue...
+Since elementary school I have been researching computer hardware and operating systems. I first learned to assemble computers and then I discovered how to properly install an operating system. Later, I continuted playing with operating systems and found about virtual machines (VMWare, Oracle Virtualbox). I found that I like spending time playing with virtual machines so i tried installing and configuring various Linux distros, Windows Server editions, misc and retro operating systems like ReactOS, OS/2, DOS, etc. I decided to attend a technical high school - computer science courses. There I learned about IT, programming, Computer networks, hardware, etc. I continued my path into IT by enrolling in Informatics at the University of Rijeka - Faculty of Informatics and Digital Technologies. There I went deeper into Computer Networks, Security, Managing Linux Systems, Programming in C++, Web development, Project management, Multimedia, etc. I plan to continue my master study.
 
 # What is my motivation and why does this repo exist?
-Write...
+In the second year of study I attended some System specific courses and discovered the job System Administrator and scope of his/her work. I found myself in that role so I started to learn what is needed to become one.
 
+Special thanks to my professor [doc. dr. sc. Vedran Miletić](https://vedran.miletic.net/) who took the time to instruct me in what I should learn for the job.
 
 # How can you contact me?
 * [e-Mail](mailto:luka.ljubojevic01@gmail.com)
