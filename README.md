@@ -40,4 +40,4 @@ Special thanks to my professor [doc. dr. sc. Vedran Miletić](https://vedran.mil
 # Notes about repo
 * **Work in Progress!**
 * Finish TODO in Systemd tutorial
-* My next step is go through [cdrrazan's](https://github.com/cdrrazan/learn-system-admin-in-10-weeks) github repo: learn-system-admin-in-10-weeks and write markdown notes about my research. 
+* My next step is to write my undergraduate thesis and go through [cdrrazan's](https://github.com/cdrrazan/learn-system-admin-in-10-weeks) github repo: learn-system-admin-in-10-weeks and write markdown notes about my research. 
