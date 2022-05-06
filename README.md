@@ -1,5 +1,4 @@
 # Hello world!
-![image](https://user-images.githubusercontent.com/95573193/166239702-2eb69668-9cba-4b19-a8bd-3f54f6286aab.png)
 
 # Who am I?
 My name is Luka Ljubojević (21 M). I'm a full-time student at Faculty of Informatics and Digital Technologies - Rijeka, Croatia, third year of the undergraduate study.
