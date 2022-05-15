@@ -1525,4 +1525,212 @@ Now, let's install Apache HTTP server on VM2 and a postgresql DB on VM1:
       name: postgresql
       state: started
 ```
+
+**Playbook to install Wordpress**
+```yaml
+---
+- name: Update web servers
+  hosts: lokalna
+  become: yes
+  vars:
+    ime_baze: mojabaza
+    ime_korisnika: mojkorisnik
+    passwd: 1234
+  tasks:
+  - name: Ensure apache is at the latest version
+    ansible.builtin.pacman:
+      name: apache
+      state: latest
+  - name: Ensure that apache is started
+    ansible.builtin.service:
+      name: httpd
+      state: started
+#  - name: Download index.html from group.miletic.net
+ #   ansible.builtin.command:
+  #    cmd: curl -o /srv/http/index.html https://group.miletic.net/index.html
+  - name: 
+    ansible.builtin.command:
+      cmd: curl -o /srv/http/index.php https://www.miletic.net/index.txt
+  - name: Ensure php-fpm is at the latest version
+    ansible.builtin.pacman:
+      name: php-fpm
+      state: latest
+  - name: Ensure that php-fpm is started
+    ansible.builtin.service:
+      name: php-fpm
+      state: started
+  - name: Copy httpd.conf
+    ansible.builtin.copy:
+      src: ./httpd.conf
+      dest: /etc/httpd/conf/httpd.conf
+  - name: Copy php-fpm.conf
+    ansible.builtin.copy:
+      src: ./php-fpm.conf
+      dest: /etc/httpd/conf/extra/php-fpm.conf
+  - name: Restart apache
+    ansible.builtin.service:
+      name: httpd
+      state: restarted
+  - name: pymysql
+    ansible.builtin.pacman:
+      name: python-pymysql
+      state: latest
+  - name: Ensure mariadb is at the latest version
+    ansible.builtin.pacman:
+      name: mariadb
+      state: latest
+  - name: Configure mariadb
+    ansible.builtin.command:
+      cmd: mariadb-install-db --user=mysql --auth-root-authentication-method=normal --basedir=/usr --datadir=/var/lib/mysql
+  - name: Ensure that mariadb is started
+    ansible.builtin.service:
+      name: mariadb
+      state: started
+  - name: Create database user with name 'bob' and password '12345' with all database privileges
+    community.mysql.mysql_user:
+      name: "{{ime_korisnika}}"
+      password: "{{passwd}}"     
+      priv: '*.*:ALL'
+      state: present
+  - name: Create a new database mojabaza
+    community.mysql.mysql_db:
+      check_implicit_admin: yes
+      login_user: "{{ime_korisnika}}"
+      login_password: "{{passwd}}"      
+      name: "{{ime_baze}}"
+      state: present
+  - name: install wordpress
+    ansible.builtin.command:
+      cmd: curl -o /tmp/wordpress.tar.gz  https://hr.wordpress.org/latest-hr.tar.gz      
+  - name: wp
+    ansible.builtin.command:
+      cmd: tar xvf /tmp/wordpress.tar.gz -C /tmp
+  - name: wp       
+    ansible.builtin.command:      
+      cmd: rm -r /srv/http
+  - name: a
+    ansible.builtin.command:
+      cmd: mv /tmp/wordpress /srv/http
+  - name: aaa
+    ansible.builtin.template:
+      src: ./wp-config.php.j2
+      dest: /srv/http/wp-config.php
+```
+
+**Playbook to install mediawiki**
+```yaml
+---
+- name: Update web servers
+  hosts: lokalna
+  become: yes
+  vars:
+    ime_baze: mojabaza
+    ime_korisnika: mojkorisnik
+    passwd: 1234
+  tasks:
+  - name: Ensure apache is at the latest version
+    ansible.builtin.pacman:
+      name: apache
+      state: latest
+  - name: Ensure that apache is started
+    ansible.builtin.service:
+      name: httpd
+      state: started
+  - name: Ensure php-fpm is at the latest version
+    ansible.builtin.pacman:
+      name: php-fpm
+      state: latest
+  - name: Ensure that php-fpm is started
+    ansible.builtin.service:
+      name: php-fpm
+      state: started
+  - name: Copy httpd.conf
+    ansible.builtin.copy:
+      src: ./httpd.conf
+      dest: /etc/httpd/conf/httpd.conf
+  - name: Copy php-fpm.conf
+    ansible.builtin.copy:
+      src: ./php-fpm.conf
+      dest: /etc/httpd/conf/extra/php-fpm.conf
+  - name: Restart apache
+    ansible.builtin.service:
+      name: httpd
+      state: restarted
+
+  - name: Install postgresql
+    ansible.builtin.pacman:
+      name: postgresql
+      state: latest
+
+  - name: Install postgresql
+    ansible.builtin.pacman:
+      name: python-psycopg2
+
+  #- name: Configure postgresql
+  #  become_user: postgres
+   # ansible.builtin.command:
+    #  cmd: initdb -D /var/lib/postgres/data
+
+  - name: Ensure that postgres is started
+    ansible.builtin.service:
+      name: postgresql
+      state: started
+
+  - name: Create database
+    become: yes
+    become_user: postgres
+    postgresql_db:
+      name: "{{ime_baze}}"
+
+
+  - name: create db user
+    become: yes
+    become_user: postgres       
+    postgresql_user:
+      state: present
+      name: "{{ime_korisnika}}"
+      password: "{{passwd}}"
+  
+
+  - name: Create a new database mojabaza
+    become: yes
+    become_user: postgres    
+    postgresql_privs:
+      type: database
+      database: "{{ ime_baze }}"
+      roles: "{{ ime_korisnika }}"
+      grant_option: no
+      privs: all
+
+  - name: install mediawiki
+    ansible.builtin.command:
+      cmd: curl -o /tmp/mediawiki.tar.gz  https://releases.wikimedia.org/mediawiki/1.37/mediawiki-1.37.2.tar.gz      
+  - name: mwiki
+    ansible.builtin.command:
+      cmd: tar xvf /tmp/mediawiki.tar.gz -C /tmp
+
+  #- name: a
+   # ansible.builtin.command:
+    #  cmd: mv /tmp/mediawiki-1.37.2 /srv/http
+
+  - name: caarl
+    ansible.builtin.command:
+      cmd: curl -o myconf.php.j2 https://gist.github.com/5154384.git
+
+  - name: aaa
+    ansible.builtin.template:
+      src: ./myconf.php.j2
+      dest: /srv/http/LocalSettings.php
+
+  - name: Install PHP packages
+    vars: 
+      ekstenzija: iconv
+    ansible.builtin.template:
+      src: ./phpextconf.conf.j2
+      dest: /etc/php/php-fpm.d/{{ ekstenzija }}.conf
+```
+
+* How to add php extensions?
+  * php-fpm: /etc/php/php-fpm.d/gd.conf or /etc/php/php.ini  
+
 Ansible can do many more things, check out [Ansible extensions](https://docs.ansible.com/ansible/latest/collections/) 
